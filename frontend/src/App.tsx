@@ -8,9 +8,16 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Landing/Home page */}
         <Route path="/" element={<LandingPage />} />
+
+        {/* User onboarding */}
         <Route path="/onboarding" element={<Onboarding />} />
+
+        {/* Chatbot page */}
         <Route path="/chat" element={<ChatPage />} />
+
+        {/* Dining menu page */}
         <Route path="/menu" element={<FoodOptions />} />
       </Routes>
     </Router>
