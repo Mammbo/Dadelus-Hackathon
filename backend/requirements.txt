@@ -1,0 +1,5 @@
+dedalus-labs
+fastapi
+pydantic
+python-dotenv
+uvicorn[standard]
