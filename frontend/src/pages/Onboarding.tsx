@@ -6,6 +6,7 @@ export default function App() {
   const [sex, setSex] = useState("");
   const [goal, setGoal] = useState("");
   const [preferences, setPreferences] = useState<string[]>([]);
+  const [diningHalls, setDiningHalls] = useState<string[]>([]);
   const [savedData, setSavedData] = useState<any>(null);
   const [step, setStep] = useState(0);
 
@@ -19,6 +20,7 @@ export default function App() {
       setSex(data.sex || "");
       setGoal(data.goal || "");
       setPreferences(data.preferences || []);
+      setDiningHalls(data.diningHalls || []);
     }
   }, []);
 
@@ -33,14 +35,19 @@ export default function App() {
         }
       }
     };
-  
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [step, age, weight, sex, goal, preferences]);  
+  }, [step, age, weight, sex, goal, preferences, diningHalls]);
 
   const handlePreferenceChange = (pref: string) => {
     setPreferences((prev) =>
       prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
+    );
+  };
+
+  const handleDiningChange = (hall: string) => {
+    setDiningHalls((prev) =>
+      prev.includes(hall) ? prev.filter((h) => h !== hall) : [...prev, hall]
     );
   };
 
@@ -55,7 +62,15 @@ export default function App() {
   const handleBack = () => setStep(step - 1);
 
   const handleSubmit = () => {
-    const data = { age, weight, sex, goal, preferences, savedAt: new Date().toISOString() };
+    const data = {
+      age,
+      weight,
+      sex,
+      goal,
+      preferences,
+      diningHalls,
+      savedAt: new Date().toISOString(),
+    };
     localStorage.setItem("fitnessData", JSON.stringify(data));
     setSavedData(data);
     alert("Data saved successfully!");
@@ -68,6 +83,7 @@ export default function App() {
     setSex("");
     setGoal("");
     setPreferences([]);
+    setDiningHalls([]);
     setSavedData(null);
     setStep(0);
     alert("Data cleared!");
@@ -132,7 +148,7 @@ export default function App() {
           ))}
         </div>
       ),
-    },    
+    },
     {
       title: "Goal",
       content: (
@@ -171,7 +187,7 @@ export default function App() {
           ))}
         </div>
       ),
-    },    
+    },
     {
       title: "Dietary Preferences",
       content: (
@@ -207,14 +223,57 @@ export default function App() {
           })}
         </div>
       ),
-    },    
+    },
+    {
+      title: "Select Preferred Dining Halls",
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {["Ferris", "JJ's", "Chef Mike's", "Chef Don's"].map((hall) => {
+            const selected = diningHalls.includes(hall);
+            return (
+              <label
+                key={hall}
+                style={{
+                  ...styles.optionBox,
+                  borderColor: selected ? "#667eea" : "#ccc",
+                  background: selected ? "rgba(102,126,234,0.1)" : "white",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() => handleDiningChange(hall)}
+                />
+                <span
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: selected ? 600 : 400,
+                    color: selected ? "#333" : "#555",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {hall}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      ),
+    },
     {
       title: "Review Your Data",
       content: (
         <div style={{ lineHeight: "1.8" }}>
-          <p><strong>Age:</strong> {age}</p>
-          <p><strong>Sex:</strong> {sex ? sex.charAt(0).toUpperCase() + sex.slice(1) : ""}</p>
-          <p><strong>Weight:</strong> {weight} lbs</p>
+          <p>
+            <strong>Age:</strong> {age}
+          </p>
+          <p>
+            <strong>Sex:</strong>{" "}
+            {sex ? sex.charAt(0).toUpperCase() + sex.slice(1) : ""}
+          </p>
+          <p>
+            <strong>Weight:</strong> {weight} lbs
+          </p>
           <p>
             <strong>Goal:</strong>{" "}
             {goal
@@ -229,15 +288,17 @@ export default function App() {
             <strong>Dietary Preferences:</strong>{" "}
             {preferences.length > 0
               ? preferences
-                  .map(
-                    (pref) => pref.charAt(0).toUpperCase() + pref.slice(1)
-                  )
+                  .map((pref) => pref.charAt(0).toUpperCase() + pref.slice(1))
                   .join(", ")
               : "None"}
           </p>
+          <p>
+            <strong>Preferred Dining Halls:</strong>{" "}
+            {diningHalls.join(", ") || "None"}
+          </p>
         </div>
       ),
-    },    
+    },
   ];
 
   return (
@@ -281,7 +342,12 @@ export default function App() {
           </div>
 
           <div style={styles.progressContainer}>
-            <div style={{ ...styles.progressBar, width: `${((step + 1) / steps.length) * 100}%` }} />
+            <div
+              style={{
+                ...styles.progressBar,
+                width: `${((step + 1) / steps.length) * 100}%`,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -400,4 +466,3 @@ const styles: Record<string, React.CSSProperties> = {
     transition: "width 0.3s ease",
   },
 };
-
