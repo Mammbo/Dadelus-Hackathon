@@ -1,7 +1,96 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+type RankedHall = {
+  dining_hall: string;
+  score: number;
+  suggested_meals: { meal: string; calories: number }[];
+};
+
+type SummaryResponse = {
+  summary: string;
+  ranked_halls: RankedHall[];
+};
+
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL?.replace(/\/$/, "") || "http://localhost:8000";
+
 export default function RecommendedMeals() {
+  const [summary, setSummary] = useState<string>("");
+  const [ranked, setRanked] = useState<RankedHall[]>([]);
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  const payload = useMemo(
+    () => ({
+      user_profile: {
+        age: 20,
+        weight: 150,
+        dietary_preferences: ["vegan", "gluten-free"],
+        goal: "Build Muscle",
+      },
+      dining_halls: [
+        {
+          name: "John Jay",
+          meals: [
+            { meal: "Vegan Tofu Bowl", dietary: ["vegan", "gluten-free"] },
+            { meal: "Chicken Caesar Salad", dietary: ["gluten-free"] },
+          ],
+        },
+        {
+          name: "Ferris Booth",
+          meals: [
+            { meal: "Grilled Salmon", dietary: ["pescatarian", "gluten-free"] },
+            { meal: "Cheese Pizza", dietary: ["vegetarian"] },
+          ],
+        },
+        {
+          name: "JJ's",
+          meals: [
+            { meal: "Quinoa Salad", dietary: ["vegan", "gluten-free"] },
+            { meal: "Beef Burger", dietary: [] },
+          ],
+        },
+      ],
+    }),
+    []
+  );
+
+  useEffect(() => {
+    let active = true;
+    const fetchData = async () => {
+      setStatus("loading");
+      setError(null);
+
+      try {
+        const resp = await fetch(`${BACKEND_URL}/onboarding-summary`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!resp.ok) {
+          throw new Error(`Request failed (${resp.status})`);
+        }
+
+        const data: SummaryResponse = await resp.json();
+        if (!active) return;
+        setSummary(data.summary.trim());
+        setRanked(data.ranked_halls || []);
+        setStatus("ready");
+      } catch (err: any) {
+        if (!active) return;
+        setError(err?.message || "Unable to reach the recommendation service.");
+        setStatus("error");
+      }
+    };
+
+    fetchData();
+    return () => {
+      active = false;
+    };
+  }, [payload]);
+
   return (
     <div
       style={{
@@ -122,10 +211,53 @@ export default function RecommendedMeals() {
           Recommended Data:
         </div>
 
-        <div className="data-box">
-          {/* Backend data will be inserted here */}
-          No data yet. Your personalized meals will appear here!
+        <div className="data-box" style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
+          {status === "loading" && "Generating your personalized recommendations…"}
+          {status === "error" && (
+            <span style={{ color: "#ffd7d7" }}>
+              {error}
+              {" "}
+              Ensure the backend is running at {BACKEND_URL}.
+            </span>
+          )}
+          {status === "ready" && summary}
         </div>
+
+        {ranked.length > 0 && (
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(14px)",
+              borderRadius: "16px",
+              padding: "1.5rem",
+              marginBottom: "2rem",
+              maxHeight: "260px",
+              overflowY: "auto",
+              color: "#fff",
+              textAlign: "left",
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: "0.75rem" }}>Top Dining Hall Matches</h2>
+            <ol style={{ margin: 0, paddingInlineStart: "1.2rem" }}>
+              {ranked.map((hall) => (
+                <li key={hall.dining_hall} style={{ marginBottom: "0.75rem" }}>
+                  <strong>{hall.dining_hall}</strong> · score {hall.score.toFixed(0)}
+                  <ul style={{ margin: "0.4rem 0 0 1rem" }}>
+                    {hall.suggested_meals.length ? (
+                      hall.suggested_meals.map((meal) => (
+                        <li key={meal.meal}>
+                          {meal.meal} — {meal.calories} kcal (est.)
+                        </li>
+                      ))
+                    ) : (
+                      <li>No direct matches yet — check live menus.</li>
+                    )}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
         <Link to="/menu" className="btn-link">
           Explore Food Options 🍽️

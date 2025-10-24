@@ -1,142 +1,185 @@
 import asyncio
-from dedalus_labs import AsyncDedalus, DedalusRunner
-from dotenv import load_dotenv
-from calorie_estimatorV2 import local_calorie_estimate
-from dedalus_runnerV2 import estimate_calories
+import os
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Tuple
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv  # type: ignore
+except ImportError:
+    load_dotenv = None
 
-# ------------------------------
-# Example dining halls data
-# ------------------------------
-dining_halls = {
-    "John Jay": [
-        {"meal": "Vegan Tofu Bowl", "dietary": ["vegan", "gluten-free"]},
-        {"meal": "Chicken Caesar Salad", "dietary": ["gluten-free"]},
-    ],
-    "Ferris Booth": [
-        {"meal": "Grilled Salmon", "dietary": ["pescatarian", "gluten-free"]},
-        {"meal": "Cheese Pizza", "dietary": ["vegetarian"]},
-    ],
-    "JJ's": [
-        {"meal": "Quinoa Salad", "dietary": ["vegan", "gluten-free"]},
-        {"meal": "Beef Burger", "dietary": []},
-    ],
-}
+try:
+    from backend.calorie_estimator import local_calorie_estimate
+    from backend.dedalus_runner import (
+        DedalusConfig,
+        run_dedalus_calorie_estimator,
+        run_dedalus_research,
+    )
+except ImportError:
+    from calorie_estimator import local_calorie_estimate  # type: ignore
+    from dedalus_runner import (  # type: ignore
+        DedalusConfig,
+        run_dedalus_calorie_estimator,
+        run_dedalus_research,
+    )
 
-# ------------------------------
-# Example user profile
-# ------------------------------
-user_profile = {
-    "age": 20,
-    "weight": 150,
-    "dietary_preferences": ["vegan", "gluten-free"],
-    "goal": "Build Muscle",  # options: Build Muscle, Lose Weight, Maintain Weight
-}
+BACKEND_DIR = Path(__file__).resolve().parent
+ENV_PATH = BACKEND_DIR / ".env"
 
-# ------------------------------
-# Helper: score a meal based on goal and dietary match
-# ------------------------------
-async def score_meal(meal_name: str, meal_diet: list[str], user_prefs: list[str], goal: str) -> float:
-    """
-    Returns a numeric score for a meal:
-    - 0 if dietary preferences are not met
-    - Higher calories for 'Build Muscle'
-    - Lower calories for 'Lose Weight'
-    """
-    # Check dietary match: all user preferences must be satisfied
-    if not all(pref in meal_diet for pref in user_prefs):
-        return 0.0
+if load_dotenv:
+    load_dotenv(ENV_PATH)
+elif ENV_PATH.exists():
+    for line in ENV_PATH.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
-    # Estimate calories
-    #est = local_calorie_estimate(meal_name, user_prefs)["estimated_calories"]
-    est = await estimate_calories(meal_name, user_prefs)
 
-    # Adjust score based on goal
-    if goal.lower() == "build muscle":
-        score = est  # higher calories = higher score
-    elif goal.lower() == "lose weight":
-        score = max(0, 500 - est)  # lower calories = higher score
+async def score_meal(
+    meal_name: str,
+    meal_diet: Iterable[str],
+    user_prefs: Iterable[str],
+    goal: str,
+) -> Tuple[float, Dict[str, Any]]:
+    """Score a meal for the given user goal and dietary needs."""
+    prefs = list(user_prefs)
+    if not all(pref in meal_diet for pref in prefs):
+        return 0.0, {}
+
+    remote = await run_dedalus_calorie_estimator(meal_name, list(prefs))
+    if isinstance(remote, dict):
+        calories = remote.get("estimated_calories")
     else:
-        score = 100  # neutral for maintain weight
+        calories = remote
 
-    return score
+    if calories is None:
+        calories = local_calorie_estimate(meal_name, list(prefs))
 
-# ------------------------------
-# Score dining halls
-# ------------------------------
-async def score_dining_halls(dining_halls: dict, user_profile: dict) -> list[dict]:
-    """
-    Returns a ranked list of dining halls with scores and matching meals.
-    """
-    ranked = []
+    if goal.lower() == "build muscle":
+        score = float(calories)
+    elif goal.lower() == "lose weight":
+        score = max(0.0, 500 - float(calories))
+    else:
+        score = 100.0
+
+    return score, {"meal": meal_name, "calories": calories}
+
+
+async def score_dining_halls(
+    dining_halls: Dict[str, List[Dict[str, Any]]],
+    user_profile: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """Return a sorted list of dining halls with scores and qualifying meals."""
+    ranked: List[Dict[str, Any]] = []
+    prefs = user_profile.get("dietary_preferences", [])
+    goal = user_profile.get("goal", "maintain weight")
 
     for hall_name, meals in dining_halls.items():
-        hall_score = 0
-        matching_meals = []
+        hall_score = 0.0
+        suggestions: List[Dict[str, Any]] = []
 
         for meal in meals:
-            score = await score_meal(
+            score, detail = await score_meal(
                 meal_name=meal["meal"],
-                meal_diet=meal["dietary"],
-                user_prefs=user_profile["dietary_preferences"],
-                goal=user_profile["goal"]
+                meal_diet=meal.get("dietary", []),
+                user_prefs=prefs,
+                goal=goal,
             )
-            if score > 0:
-                matching_meals.append(meal["meal"])
             hall_score += score
+            if detail:
+                suggestions.append(detail)
 
-        ranked.append({
-            "dining_hall": hall_name,
-            "score": hall_score,
-            "matching_meals": matching_meals
-        })
+        ranked.append(
+            {
+                "dining_hall": hall_name,
+                "score": hall_score,
+                "suggested_meals": suggestions,
+            }
+        )
 
-    # Sort descending by score
     ranked.sort(key=lambda x: x["score"], reverse=True)
     return ranked
 
-# ------------------------------
-# Main agent function
-# ------------------------------
-async def main():
-    client = AsyncDedalus()
-    runner = DedalusRunner(client)
 
-    # Pre-score dining halls using local calorie estimator
+async def generate_onboarding_summary(
+    user_profile: Dict[str, Any],
+    dining_halls: Dict[str, List[Dict[str, Any]]],
+) -> Dict[str, Any]:
+    """Produce a textual summary and supporting data for the onboarding flow."""
     ranked_halls = await score_dining_halls(dining_halls, user_profile)
 
-    # Dedalus reasoning prompt
     prompt = f"""
-    You are a nutritionist AI assistant.
+You are a campus dining assistant. Craft a concise, positive message for a student who just completed onboarding.
 
-    User Profile:
-    {user_profile}
+User profile:
+{user_profile}
 
-    Pre-scored Dining Halls(Based on Calorie and Dietary Restrictions:
-    {ranked_halls}
+Pre-scored dining halls (higher score = better fit):
+{ranked_halls}
 
-    Dining Hall Info:
-    {dining_halls}
+Dining hall data supplied:
+{dining_halls}
 
-    Task:
-    Recommend the best dining hall for this user based on the precomputed scores,
-    dietary fit, and user goal. Explain your reasoning in plain text.
-    """
+Respond with a short block of text (2-3 paragraphs) that:
+1. Highlights the top dining hall choices and why they match the student's goals/preferences.
+2. Suggests at least one meal item that fits their diet from each top pick.
+3. Encourages them to explore the app further.
+"""
 
-    result = await runner.run(
-        input=prompt,
-        model="openai/gpt-5",
-        tools=[]  # No tools needed; scoring done locally
+    recommendation = await run_dedalus_research(
+        prompt,
+        DedalusConfig(model="openai/gpt-4.1"),
     )
 
-    print("\n=== Ranked Dining Halls (Numeric Scores) ===")
-    for hall in ranked_halls:
-        print(hall)
+    if recommendation:
+        return {
+            "summary": recommendation.strip(),
+            "ranked_halls": ranked_halls,
+        }
 
-    print("\n=== Dedalus Recommendation & Reasoning ===")
-    print(result.final_output)
+    lines = ["Thanks for completing onboarding! Here are great spots to try next:"]
+    for hall in ranked_halls[:3]:
+        meal_names = ", ".join(m["meal"] for m in hall["suggested_meals"]) or "options that suit your preferences"
+        lines.append(f"- {hall['dining_hall']}: {meal_names}")
+    lines.append("Open the dining view to see live menus and more recommendations.")
+    return {
+        "summary": "\n".join(lines),
+        "ranked_halls": ranked_halls,
+    }
+
+
+def generate_onboarding_summary_sync(
+    user_profile: Dict[str, Any],
+    dining_halls: Dict[str, List[Dict[str, Any]]],
+) -> Dict[str, Any]:
+    """Synchronous helper for environments that cannot await."""
+    return asyncio.run(generate_onboarding_summary(user_profile, dining_halls))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    demo_profile = {
+        "age": 20,
+        "weight": 150,
+        "dietary_preferences": ["vegan", "gluten-free"],
+        "goal": "Build Muscle",
+    }
+    demo_halls = {
+        "John Jay": [
+            {"meal": "Vegan Tofu Bowl", "dietary": ["vegan", "gluten-free"]},
+            {"meal": "Chicken Caesar Salad", "dietary": ["gluten-free"]},
+        ],
+        "Ferris Booth": [
+            {"meal": "Grilled Salmon", "dietary": ["pescatarian", "gluten-free"]},
+            {"meal": "Cheese Pizza", "dietary": ["vegetarian"]},
+        ],
+        "JJ's": [
+            {"meal": "Quinoa Salad", "dietary": ["vegan", "gluten-free"]},
+            {"meal": "Beef Burger", "dietary": []},
+        ],
+    }
+
+    result = generate_onboarding_summary_sync(demo_profile, demo_halls)
+    print(result["summary"])
+    print("\nRanked halls:", result["ranked_halls"])
