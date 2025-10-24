@@ -1,169 +1,403 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 
 export default function App() {
-  const [age, setAge] = useState('');
-  const [weight, setWeight] = useState('');
-  const [sex, setSex] = useState('');
-  const [goal, setGoal] = useState('');
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [sex, setSex] = useState("");
+  const [goal, setGoal] = useState("");
+  const [preferences, setPreferences] = useState<string[]>([]);
   const [savedData, setSavedData] = useState<any>(null);
+  const [step, setStep] = useState(0);
 
-  // Load saved data when component mounts
   useEffect(() => {
-    const stored = localStorage.getItem('fitnessData');
+    const stored = localStorage.getItem("fitnessData");
     if (stored) {
       const data = JSON.parse(stored);
       setSavedData(data);
-      setAge(data.age);
-      setWeight(data.weight);
-      setSex(data.sex);
-      setGoal(data.goal);
+      setAge(data.age || "");
+      setWeight(data.weight || "");
+      setSex(data.sex || "");
+      setGoal(data.goal || "");
+      setPreferences(data.preferences || []);
     }
   }, []);
 
-  const handleSubmit = () => {
-    if (!age || !weight || !sex || !goal) {
-      alert('Please fill in all fields');
-      return;
-    }
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (step < steps.length - 1) {
+          handleNext();
+        } else {
+          handleSubmit();
+        }
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [step, age, weight, sex, goal, preferences]);  
 
-    const data = { age, weight, sex, goal, savedAt: new Date().toISOString() };
-    
-    // Save to localStorage
-    localStorage.setItem('fitnessData', JSON.stringify(data));
+  const handlePreferenceChange = (pref: string) => {
+    setPreferences((prev) =>
+      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
+    );
+  };
+
+  const handleNext = () => {
+    if (step === 0 && !age) return alert("Please enter your age");
+    if (step === 1 && !weight) return alert("Please enter your weight");
+    if (step === 2 && !sex) return alert("Please select your sex");
+    if (step === 3 && !goal) return alert("Please select your goal");
+    setStep(step + 1);
+  };
+
+  const handleBack = () => setStep(step - 1);
+
+  const handleSubmit = () => {
+    const data = { age, weight, sex, goal, preferences, savedAt: new Date().toISOString() };
+    localStorage.setItem("fitnessData", JSON.stringify(data));
     setSavedData(data);
-    
-    alert('Data saved successfully!');
+    alert("Data saved successfully!");
   };
 
   const handleClear = () => {
-    localStorage.removeItem('fitnessData');
-    setAge('');
-    setWeight('');
-    setSex('');
-    setGoal('');
+    localStorage.removeItem("fitnessData");
+    setAge("");
+    setWeight("");
+    setSex("");
+    setGoal("");
+    setPreferences([]);
     setSavedData(null);
-    alert('Data cleared!');
+    setStep(0);
+    alert("Data cleared!");
   };
 
+  const steps = [
+    {
+      title: "Your Age",
+      content: (
+        <input
+          type="number"
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          style={styles.input}
+          placeholder="Enter your age"
+        />
+      ),
+    },
+    {
+      title: "Your Weight (lbs)",
+      content: (
+        <input
+          type="number"
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          style={styles.input}
+          placeholder="Enter your weight"
+        />
+      ),
+    },
+    {
+      title: "Sex",
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {["male", "female"].map((option) => (
+            <label
+              key={option}
+              style={{
+                ...styles.optionBox,
+                borderColor: sex === option ? "#667eea" : "#ccc",
+                background: sex === option ? "rgba(102,126,234,0.1)" : "white",
+              }}
+            >
+              <input
+                type="radio"
+                name="sex"
+                value={option}
+                checked={sex === option}
+                onChange={(e) => setSex(e.target.value)}
+              />
+              <span
+                style={{
+                  marginLeft: 8,
+                  fontWeight: sex === option ? 600 : 400,
+                  color: sex === option ? "#333" : "#555",
+                  textTransform: "capitalize",
+                }}
+              >
+                {option}
+              </span>
+            </label>
+          ))}
+        </div>
+      ),
+    },    
+    {
+      title: "Goal",
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {["maintain", "lose", "build"].map((option) => (
+            <label
+              key={option}
+              style={{
+                ...styles.optionBox,
+                borderColor: goal === option ? "#667eea" : "#ccc",
+                background: goal === option ? "rgba(102,126,234,0.1)" : "white",
+              }}
+            >
+              <input
+                type="radio"
+                name="goal"
+                value={option}
+                checked={goal === option}
+                onChange={(e) => setGoal(e.target.value)}
+              />
+              <span
+                style={{
+                  marginLeft: 8,
+                  fontWeight: goal === option ? 600 : 400,
+                  color: goal === option ? "#333" : "#555",
+                  textTransform: "capitalize",
+                }}
+              >
+                {option === "build"
+                  ? "Build Muscle"
+                  : option === "lose"
+                  ? "Lose Weight"
+                  : "Maintain Calories"}
+              </span>
+            </label>
+          ))}
+        </div>
+      ),
+    },    
+    {
+      title: "Dietary Preferences",
+      content: (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {["vegan", "kosher", "halal", "gluten free"].map((pref) => {
+            const selected = preferences.includes(pref);
+            return (
+              <label
+                key={pref}
+                style={{
+                  ...styles.optionBox,
+                  borderColor: selected ? "#667eea" : "#ccc",
+                  background: selected ? "rgba(102,126,234,0.1)" : "white",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() => handlePreferenceChange(pref)}
+                />
+                <span
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: selected ? 600 : 400,
+                    color: selected ? "#333" : "#555",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {pref}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      ),
+    },    
+    {
+      title: "Review Your Data",
+      content: (
+        <div style={{ lineHeight: "1.8" }}>
+          <p><strong>Age:</strong> {age}</p>
+          <p><strong>Sex:</strong> {sex ? sex.charAt(0).toUpperCase() + sex.slice(1) : ""}</p>
+          <p><strong>Weight:</strong> {weight} lbs</p>
+          <p>
+            <strong>Goal:</strong>{" "}
+            {goal
+              ? goal === "maintain"
+                ? "Maintain Calories"
+                : goal === "lose"
+                ? "Lose Weight"
+                : "Build Muscle"
+              : ""}
+          </p>
+          <p>
+            <strong>Dietary Preferences:</strong>{" "}
+            {preferences.length > 0
+              ? preferences
+                  .map(
+                    (pref) => pref.charAt(0).toUpperCase() + pref.slice(1)
+                  )
+                  .join(", ")
+              : "None"}
+          </p>
+        </div>
+      ),
+    },    
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Some information about you</h1>
-        <p className="text-gray-600 mb-6">Let's calculate your personalized plan</p>
-        
+    <div style={styles.background}>
+      <style>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateX(40px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+
+      <div style={styles.card}>
         {savedData && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800 font-medium">✓ Data saved locally</p>
-            <p className="text-xs text-green-600 mt-1">
-              Last updated: {new Date(savedData.savedAt).toLocaleString()}
-            </p>
-          </div>
+          <button onClick={handleClear} style={styles.clearBtn}>
+            ✖
+          </button>
         )}
 
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Age
-            </label>
-            <input
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Enter your age"
-            />
-          </div>
+        <div style={{ animation: "fadeSlideIn 0.4s ease" }}>
+          <h2 style={styles.title}>{steps[step].title}</h2>
+          <div>{steps[step].content}</div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Weight (lbs)
-            </label>
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Enter your weight"
-            />
-          </div>
+          <div style={styles.buttonRow}>
+            {step > 0 ? (
+              <button onClick={handleBack} style={styles.backBtn}>
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sex
-            </label>
-            <select
-              value={sex}
-              onChange={(e) => setSex(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="">Select...</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Goal
-            </label>
-            <div className="space-y-3">
-              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                <input
-                  type="radio"
-                  name="goal"
-                  value="maintain"
-                  checked={goal === 'maintain'}
-                  onChange={(e) => setGoal(e.target.value)}
-                  className="w-4 h-4 text-indigo-600"
-                />
-                <span className="ml-3 text-gray-700">Maintain Calories</span>
-              </label>
-              
-              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                <input
-                  type="radio"
-                  name="goal"
-                  value="lose"
-                  checked={goal === 'lose'}
-                  onChange={(e) => setGoal(e.target.value)}
-                  className="w-4 h-4 text-indigo-600"
-                />
-                <span className="ml-3 text-gray-700">Lose Weight</span>
-              </label>
-              
-              <label className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                <input
-                  type="radio"
-                  name="goal"
-                  value="build"
-                  checked={goal === 'build'}
-                  onChange={(e) => setGoal(e.target.value)}
-                  className="w-4 h-4 text-indigo-600"
-                />
-                <span className="ml-3 text-gray-700">Build Muscle</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleSubmit}
-              className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg"
-            >
-              Save and Proceed
-            </button>
-            
-            {savedData && (
-              <button
-                onClick={handleClear}
-                className="px-6 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
-              >
-                Clear
+            {step < steps.length - 1 ? (
+              <button onClick={handleNext} style={styles.nextBtn}>
+                Next
+              </button>
+            ) : (
+              <button onClick={handleSubmit} style={styles.saveBtn}>
+                Save
               </button>
             )}
+          </div>
+
+          <div style={styles.progressContainer}>
+            <div style={{ ...styles.progressBar, width: `${((step + 1) / steps.length) * 100}%` }} />
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  background: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(135deg, #6CC1FF 0%, #3A8DFF 100%)",
+    fontFamily: "'Inter', sans-serif",
+    padding: "20px",
+  },
+  card: {
+    background: "rgba(255, 255, 255, 0.95)",
+    borderRadius: "20px",
+    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+    padding: "50px 40px",
+    width: "100%",
+    maxWidth: "450px",
+    position: "relative",
+    transition: "all 0.3s ease",
+  },
+  title: {
+    fontSize: "26px",
+    fontWeight: 700,
+    color: "#333",
+    marginBottom: "24px",
+    textAlign: "center",
+    letterSpacing: "-0.3px",
+  },
+  input: {
+    width: "100%",
+    height: "48px",
+    padding: "0 14px",
+    fontSize: "16px",
+    borderRadius: "10px",
+    border: "1.5px solid #ccc",
+    outline: "none",
+    transition: "all 0.2s ease",
+    boxSizing: "border-box",
+    display: "flex",
+    alignItems: "center",
+  },
+  optionBox: {
+    display: "flex",
+    alignItems: "center",
+    border: "1.5px solid #ccc",
+    borderRadius: "10px",
+    padding: "12px 14px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    background: "white",
+  },
+  buttonRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginTop: "32px",
+  },
+  backBtn: {
+    background: "#e0e0e0",
+    border: "none",
+    padding: "12px 22px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "15px",
+    transition: "background 0.2s",
+  },
+  nextBtn: {
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "15px",
+    transition: "opacity 0.2s",
+  },
+  saveBtn: {
+    background: "linear-gradient(135deg, #00b09b, #96c93d)",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "15px",
+  },
+  clearBtn: {
+    position: "absolute",
+    top: "14px",
+    right: "18px",
+    background: "none",
+    border: "none",
+    color: "#999",
+    fontSize: "18px",
+    cursor: "pointer",
+  },
+  progressContainer: {
+    height: "8px",
+    background: "#eee",
+    borderRadius: "4px",
+    marginTop: "28px",
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    background: "linear-gradient(90deg, #667eea, #764ba2)",
+    borderRadius: "4px",
+    transition: "width 0.3s ease",
+  },
+};
+
