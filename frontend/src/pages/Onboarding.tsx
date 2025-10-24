@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; 
 
 export default function App() {
-  const navigate = useNavigate(); 
-
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [sex, setSex] = useState("");
@@ -77,8 +74,6 @@ export default function App() {
     localStorage.setItem("fitnessData", JSON.stringify(data));
     setSavedData(data);
     alert("Data saved successfully!");
-
-    navigate("/food-options");
   };
 
   const handleClear = () => {
