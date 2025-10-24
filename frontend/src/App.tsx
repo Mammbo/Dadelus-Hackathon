@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import Onboarding from './pages/Onboarding';
 import ChatPage from './pages/ChatPage';
 import FoodOptions from './pages/FoodOptions';
+import RecommendedMeals from './pages/RecommendedMeals'; // <-- import the new page
 
 function App() {
   return (
@@ -19,6 +20,9 @@ function App() {
 
         {/* Dining menu page */}
         <Route path="/menu" element={<FoodOptions />} />
+
+        {/* User recommended meals */}
+        <Route path="/recommended" element={<RecommendedMeals />} /> {/* <-- new route */}
       </Routes>
     </Router>
   );

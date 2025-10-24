@@ -58,6 +58,21 @@ export default function LandingPage() {
         >
           View Menu
         </Link>
+
+        <Link
+          to="/recommended"
+          style={{
+            padding: '0.9rem 1.6rem',
+            backgroundColor: '#FFD700',
+            color: '#1867C0',
+            fontWeight: 700,
+            textDecoration: 'none',
+            borderRadius: '10px',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
+          }}
+        >
+          Recommended Meals
+        </Link>
       </div>
 
       <small style={{ marginTop: '1.25rem', opacity: 0.9 }}>
