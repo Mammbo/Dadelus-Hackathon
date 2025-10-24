@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 export default function App() {
   const [age, setAge] = useState("");
@@ -9,7 +10,7 @@ export default function App() {
   const [diningHalls, setDiningHalls] = useState<string[]>([]);
   const [savedData, setSavedData] = useState<any>(null);
   const [step, setStep] = useState(0);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const stored = localStorage.getItem("fitnessData");
     if (stored) {
@@ -74,6 +75,7 @@ export default function App() {
     localStorage.setItem("fitnessData", JSON.stringify(data));
     setSavedData(data);
     alert("Data saved successfully!");
+    navigate("/Recommended");
   };
 
   const handleClear = () => {
