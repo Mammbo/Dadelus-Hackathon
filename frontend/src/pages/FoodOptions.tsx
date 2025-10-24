@@ -62,14 +62,22 @@ const diningData = {
       name: 'Ferris Booth Commons',
       hours: '11:00 AM - 3:00 PM',
       stations: [
-
+            {
+                "name": "Ferris Booth Hot & Cold",
+                "icon": "🍽️",
+                "items": ["Grilled Salmon", "Cheese Pizza"],
+            }
       ],
     },
     {
       name: "JJ's Place",
       hours: '12:00 PM - 2:30 PM',
       stations: [
-
+{
+                "name": "JJ's Specials",
+                "icon": "🥙",
+                "items": ["Quinoa Salad", "Beef Burger"],
+            }
       ],
     },
     {
@@ -116,7 +124,13 @@ const diningData = {
     {
       name: 'John Jay',
       hours: 'Closed for Lunch',
-      stations: [],
+      stations: [
+      {
+                "name": "John Jay Main Line",
+                "icon": "🥗",
+                "items": ["Vegan Tofu Bowl", "Chicken Caesar Salad"],
+            }
+      ],
     },
   ],
 

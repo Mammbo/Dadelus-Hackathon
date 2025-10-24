@@ -61,7 +61,7 @@ export default function LandingPage() {
       </div>
 
       <small style={{ marginTop: '1.25rem', opacity: 0.9 }}>
-        (For dev: Start Chatting bypasses onboarding so you can test the chatbot and menu.)
+        (For dev: View menu bypasses onboarding)
       </small>
     </div>
   );
