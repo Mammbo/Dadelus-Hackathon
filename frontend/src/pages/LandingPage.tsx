@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function LandingPage() {
   return (
     <div
@@ -13,7 +15,14 @@ export default function LandingPage() {
         padding: '1rem',
       }}
     >
-      <h1 style={{ fontSize: '3.5rem', marginBottom: '0.5rem', fontWeight: '700', textShadow: '2px 2px rgba(0,0,0,0.15)' }}>
+      <h1
+        style={{
+          fontSize: '3.5rem',
+          marginBottom: '0.5rem',
+          fontWeight: '700',
+          textShadow: '2px 2px rgba(0,0,0,0.15)',
+        }}
+      >
         LionDine AI
       </h1>
       <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', maxWidth: '650px' }}>
@@ -21,8 +30,8 @@ export default function LandingPage() {
       </p>
 
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <a
-          href="/chat"
+        <Link
+          to="/onboarding"
           style={{
             padding: '0.9rem 1.6rem',
             backgroundColor: 'white',
@@ -34,10 +43,10 @@ export default function LandingPage() {
           }}
         >
           Start Chatting
-        </a>
+        </Link>
 
-        <a
-          href="/menu"
+        <Link
+          to="/menu"
           style={{
             padding: '0.9rem 1.6rem',
             backgroundColor: 'rgba(255,255,255,0.12)',
@@ -48,7 +57,7 @@ export default function LandingPage() {
           }}
         >
           View Menu
-        </a>
+        </Link>
       </div>
 
       <small style={{ marginTop: '1.25rem', opacity: 0.9 }}>
