@@ -6,88 +6,133 @@ const diningData = {
       name: 'Ferris Booth Commons',
       hours: '7:00 AM - 11:00 AM',
       stations: [
-        { name: 'Action Station', icon: '🍲', items: ['Oatmeal', 'Scrambled Eggs', 'Vegan Pancakes'] },
-        { name: 'Fruit Bar', icon: '🍎', items: ['Cantaloupe', 'Watermelon', 'Pineapple'] },
+
       ],
     },
     {
       name: "JJ's Place",
       hours: '7:30 AM - 11:30 AM',
       stations: [
-        { name: 'Main Line', icon: '🥪', items: ['Egg Sandwich', 'Bagels with Cream Cheese', 'Breakfast Burrito'] },
-        { name: 'Grill', icon: '🍳', items: ['Bacon', 'Sausage', 'Hash Browns'] },
+
       ],
     },
     {
       name: 'Chef Mike\'s Sub Shop',
       hours: '10:30 AM - 10:00 PM',
       stations: [
-        { name: 'Build Your Own - Right Line', icon: '🥪', items: ['Various Bread Options', 'Cold Cuts', 'Cheeses', 'Toppings'] },
-        { name: 'Hot Counter - Left Line', icon: '🌶️', items: ['Hot Chicken Sub', 'Mike\'s Hot Honey'] },
+
       ],
     },
     {
       name: 'Chef Don\'s Pizza Pi',
       hours: '11:00 AM - 6:00 PM',
       stations: [
-        { name: 'Entree', icon: '🍕', items: ['Build Your Own Pizza', 'Toasted Cuban Sandwich'] },
-        { name: 'Sides', icon: '🍟', items: ['Piece of Fruit', 'Soup', 'Milkshake'] },
+
       ],
     },
+    {
+      name: 'Faculty House',
+      hours: 'Closed for Breakfast',
+      stations: [],
+    },
+    {
+      name: 'Grace Dodge',
+      hours: 'Closed for Breakfast',
+      stations: [],
+    },
+    {
+      name: "Johnny's",
+      hours: 'Closed for Breakfast',
+      stations: [],
+    },
+    {
+      name: 'Fac Shack',
+      hours: 'Closed for Breakfast',
+      stations: [],
+    },
+    {
+      name: 'John Jay',
+      hours: 'Closed for Breakfast',
+      stations: [],
+    },
   ],
+
   Lunch: [
     {
       name: 'Ferris Booth Commons',
       hours: '11:00 AM - 3:00 PM',
       stations: [
-        { name: 'Main Line', icon: '🥩', items: ['Grilled Chicken', 'Vegan Chili', 'Paella'] },
-        { name: 'Fry Station', icon: '🍟', items: ['French Fries', 'Onion Rings'] },
+
       ],
     },
     {
       name: "JJ's Place",
       hours: '12:00 PM - 2:30 PM',
       stations: [
-        { name: 'Main Line', icon: '🥪', items: ['Turkey Burger with Sesame Glaze', 'Chicken Parm Sandwich', 'Fish and Chips'] },
-        { name: 'Fry Station', icon: '🍟', items: ['Dino Nuggets', 'Sweet Potato Fries', 'Steak Fries'] },
-        { name: 'Grill', icon: '🍔', items: ['BBQ Chicken Quesadilla'] },
+
       ],
     },
     {
       name: 'Chef Mike\'s Sub Shop',
       hours: '10:30 AM - 10:00 PM',
       stations: [
-        { name: 'Build Your Own - Right Line', icon: '🥪', items: ['Various Bread Options', 'Cold Cuts', 'Cheeses', 'Toppings'] },
-        { name: 'Hot Counter - Left Line', icon: '🌶️', items: ['Hot Chicken Sub', 'Mike\'s Hot Honey'] },
+      
       ],
     },
     {
       name: 'Chef Don\'s Pizza Pi',
       hours: '11:00 AM - 6:00 PM',
       stations: [
-        { name: 'Entree', icon: '🍕', items: ['Build Your Own Pizza', 'Toasted Cuban Sandwich'] },
-        { name: 'Sides', icon: '🍟', items: ['Piece of Fruit', 'Soup', 'Milkshake'] },
+        
       ],
     },
+    {
+      name: 'Hewitt',
+      hours: '11:00 AM - 2:30 PM',
+      stations: [
+        
+      ],
+    },
+    {
+      name: 'Faculty House',
+      hours: 'Closed for Lunch',
+      stations: [],
+    },
+    {
+      name: 'Grace Dodge',
+      hours: 'Closed for Lunch',
+      stations: [],
+    },
+    {
+      name: "Johnny's",
+      hours: 'Closed for Lunch',
+      stations: [],
+    },
+    {
+      name: 'Fac Shack',
+      hours: 'Closed for Lunch',
+      stations: [],
+    },
+    {
+      name: 'John Jay',
+      hours: 'Closed for Lunch',
+      stations: [],
+    },
   ],
+
   Dinner: [
     {
       name: 'Ferris Booth Commons',
       hours: '5:00 PM - 8:00 PM',
       stations: [
-        { name: 'Main Line', icon: '🥩', items: ['Chicken Parm', 'Four Cheese Baked Ziti', 'Garlic Bread', 'Navy Beans', 'Ratatouille'] },
-        { name: 'Vegan Station', icon: '🥦', items: ['Vegan Chicken Parm', 'Orecchiette with Sundried Tomatoes and Broccoli Rabe', 'Ratatouille'] },
-        { name: 'Action Station', icon: '🍛', items: ['Chicken Tikka Masala', 'Naan Bread', 'White Rice'] },
-        { name: 'Pasta, Quesadilla & Rice Bowl Station', icon: '🍝', items: ['Quesadilla', 'Pasta', 'Rice Bowl'] },
+        
       ],
     },
     {
       name: "JJ's Place",
       hours: '5:00 PM - 11:00 PM',
       stations: [
-        { name: 'Main Line', icon: '🥪', items: ['Turkey Burger with Sesame Glaze', 'Chicken Parm Sandwich', 'Fish and Chips'] },
-        { name: 'Fry Station', icon: '🍟', items: ['Dino Nuggets', 'Sweet Potato Fries', 'Steak Fries'] },
-        { name: 'Grill', icon: '🍔', items: ['BBQ Chicken Quesadilla'] },
+        
       ],
     },
     {
@@ -102,12 +147,11 @@ const diningData = {
       name: 'Chef Don\'s Pizza Pi',
       hours: '11:00 AM - 6:00 PM',
       stations: [
-        { name: 'Entree', icon: '🍕', items: ['Build Your Own Pizza', 'Toasted Cuban Sandwich'] },
-        { name: 'Sides', icon: '🍟', items: ['Piece of Fruit', 'Soup', 'Milkshake'] },
       ],
     },
   ],
 };
+
 
 export default function FoodOptions() {
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
